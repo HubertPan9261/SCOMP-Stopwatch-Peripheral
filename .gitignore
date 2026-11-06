@@ -1,0 +1,21 @@
+# Original pasted lab; the reusable source copy is SCOMP_Stopwatch/.
+/SCOMP_Lab8_Fall25/
+
+# Quartus build databases, programming outputs, and simulation products.
+**/db/
+**/incremental_db/
+**/output_files/
+**/simulation/
+**/*_sim/
+**/greybox_tmp/
+*.qws
+*.bak
+*.rpt
+*.summary
+*.sof
+*.pof
+*.jic
+*.qdb
+*.smsg
+*.qmsg
+*.ipregen.rpt

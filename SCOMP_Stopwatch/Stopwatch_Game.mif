@@ -1,0 +1,162 @@
+-- Altera Memory Initialization File (MIF)
+
+DEPTH = 2048;
+WIDTH = 16;
+
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+  BEGIN
+    000 : 1800; -- LOADI  0
+    001 : 1080; -- STORE  Score
+    002 : 1081; -- STORE  Value
+    003 : 9805; -- OUT    Hex1
+    004 : 9804; -- OUT    Hex0
+    005 : 9802; -- OUT    Timer         ; Reset timer once per game
+    006 : 807b; -- CALL   CheckTime
+    007 : 9000; -- IN     Switches
+    008 : 9801; -- OUT    LEDs
+    009 : 7806; -- JNZ    WaitAllDown
+    00a : 807b; -- CALL   CheckTime
+    00b : 0881; -- LOAD   Value
+    00c : 3001; -- ADDI   1
+    00d : 1081; -- STORE  Value
+    00e : 9000; -- IN     Switches
+    00f : 9801; -- OUT    LEDs
+    010 : 700a; -- JZERO  Counting
+    011 : 288f; -- SUB    Bit9
+    012 : 7014; -- JZERO  StartRound
+    013 : 5806; -- JUMP   WaitAllDown
+    014 : 0881; -- LOAD   Value
+    015 : 9804; -- OUT    Hex0
+    016 : 7006; -- JZERO  WaitAllDown   ; Nothing to knock out if already 0000
+    017 : 0881; -- LOAD   Value
+    018 : 388a; -- AND    Mask
+    019 : 1086; -- STORE  Nibble1
+    01a : 0881; -- LOAD   Value
+    01b : 5014; -- SHIFT  -4
+    01c : 388a; -- AND    Mask
+    01d : 1087; -- STORE  Nibble2
+    01e : 0881; -- LOAD   Value
+    01f : 5018; -- SHIFT  -8
+    020 : 388a; -- AND    Mask
+    021 : 1088; -- STORE  Nibble3
+    022 : 0881; -- LOAD   Value
+    023 : 501c; -- SHIFT  -12
+    024 : 388a; -- AND    Mask
+    025 : 1089; -- STORE  Nibble4
+    026 : 0886; -- LOAD   Nibble1
+    027 : 1082; -- STORE  Largest
+    028 : 0887; -- LOAD   Nibble2
+    029 : 2882; -- SUB    Largest
+    02a : 682c; -- JPOS   UseNibble2
+    02b : 582e; -- JUMP   CheckNibble3
+    02c : 0887; -- LOAD   Nibble2
+    02d : 1082; -- STORE  Largest
+    02e : 0888; -- LOAD   Nibble3
+    02f : 2882; -- SUB    Largest
+    030 : 6832; -- JPOS   UseNibble3
+    031 : 5834; -- JUMP   CheckNibble4
+    032 : 0888; -- LOAD   Nibble3
+    033 : 1082; -- STORE  Largest
+    034 : 0889; -- LOAD   Nibble4
+    035 : 2882; -- SUB    Largest
+    036 : 6838; -- JPOS   UseNibble4
+    037 : 583a; -- JUMP   CheckAnswer
+    038 : 0889; -- LOAD   Nibble4
+    039 : 1082; -- STORE  Largest
+    03a : 807b; -- CALL   CheckTime
+    03b : 9000; -- IN     Switches
+    03c : 9801; -- OUT    LEDs
+    03d : 1083; -- STORE  Pattern
+    03e : 0883; -- LOAD   Pattern
+    03f : 388b; -- AND    Bit0
+    040 : 784b; -- JNZ    Selected0
+    041 : 0883; -- LOAD   Pattern
+    042 : 388c; -- AND    Bit1
+    043 : 7852; -- JNZ    Selected1
+    044 : 0883; -- LOAD   Pattern
+    045 : 388d; -- AND    Bit2
+    046 : 785a; -- JNZ    Selected2
+    047 : 0883; -- LOAD   Pattern
+    048 : 388e; -- AND    Bit3
+    049 : 7862; -- JNZ    Selected3
+    04a : 583a; -- JUMP   CheckAnswer
+    04b : 0881; -- LOAD   Value
+    04c : 388a; -- AND    Mask
+    04d : 7041; -- JZERO  CheckSW1
+    04e : 1084; -- STORE  SelectedDigit
+    04f : 0890; -- LOAD   Clear0
+    050 : 1085; -- STORE  ClearMask
+    051 : 586a; -- JUMP   CompareDigit
+    052 : 0881; -- LOAD   Value
+    053 : 5014; -- SHIFT  -4
+    054 : 388a; -- AND    Mask
+    055 : 7044; -- JZERO  CheckSW2
+    056 : 1084; -- STORE  SelectedDigit
+    057 : 0891; -- LOAD   Clear1
+    058 : 1085; -- STORE  ClearMask
+    059 : 586a; -- JUMP   CompareDigit
+    05a : 0881; -- LOAD   Value
+    05b : 5018; -- SHIFT  -8
+    05c : 388a; -- AND    Mask
+    05d : 7047; -- JZERO  CheckSW3
+    05e : 1084; -- STORE  SelectedDigit
+    05f : 0892; -- LOAD   Clear2
+    060 : 1085; -- STORE  ClearMask
+    061 : 586a; -- JUMP   CompareDigit
+    062 : 0881; -- LOAD   Value
+    063 : 501c; -- SHIFT  -12
+    064 : 388a; -- AND    Mask
+    065 : 703a; -- JZERO  CheckAnswer
+    066 : 1084; -- STORE  SelectedDigit
+    067 : 0893; -- LOAD   Clear3
+    068 : 1085; -- STORE  ClearMask
+    069 : 586a; -- JUMP   CompareDigit
+    06a : 0884; -- LOAD   SelectedDigit
+    06b : 2882; -- SUB    Largest
+    06c : 7878; -- JNZ    GameOver
+    06d : 0881; -- LOAD   Value
+    06e : 3885; -- AND    ClearMask
+    06f : 1081; -- STORE  Value
+    070 : 0880; -- LOAD   Score
+    071 : 3001; -- ADDI   1
+    072 : 1080; -- STORE  Score
+    073 : 9805; -- OUT    Hex1
+    074 : 0881; -- LOAD   Value
+    075 : 9804; -- OUT    Hex0
+    076 : 7006; -- JZERO  WaitAllDown
+    077 : 5817; -- JUMP   FindLargest
+    078 : 9000; -- IN     Switches
+    079 : 9801; -- OUT    LEDs
+    07a : 5878; -- JUMP   GameOver
+    07b : 9002; -- IN     Timer
+    07c : 379c; -- ADDI   -100
+    07d : 607f; -- JNEG   TimeRemaining
+    07e : 5878; -- JUMP   GameOver
+    07f : 8800; -- RETURN
+    080 : 0000; -- Score:         DW 0
+    081 : 0000; -- Value:         DW 0
+    082 : 0000; -- Largest:       DW 0
+    083 : 0000; -- Pattern:       DW 0
+    084 : 0000; -- SelectedDigit: DW 0
+    085 : 0000; -- ClearMask:     DW 0
+    086 : 0000; -- Nibble1:       DW 0
+    087 : 0000; -- Nibble2:       DW 0
+    088 : 0000; -- Nibble3:       DW 0
+    089 : 0000; -- Nibble4:       DW 0
+    08a : 000f; -- Mask:   DW &H000F
+    08b : 0001; -- Bit0:   DW &H0001
+    08c : 0002; -- Bit1:   DW &H0002
+    08d : 0004; -- Bit2:   DW &H0004
+    08e : 0008; -- Bit3:   DW &H0008
+    08f : 0200; -- Bit9:   DW &H0200
+    090 : fff0; -- Clear0: DW &HFFF0
+    091 : ff0f; -- Clear1: DW &HFF0F
+    092 : f0ff; -- Clear2: DW &HF0FF
+    093 : 0fff; -- Clear3: DW &H0FFF
+
+    [094..7ff] : 0000; -- Empty memory
+
+  END;
