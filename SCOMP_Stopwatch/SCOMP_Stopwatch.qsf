@@ -132,6 +132,8 @@ set_location_assignment PIN_AF19 -to HEX5[5]
 set_location_assignment PIN_AB21 -to HEX5[6]
 
 set_global_assignment -name ADVANCED_PHYSICAL_OPTIMIZATION OFF
+
+set_global_assignment -name VHDL_FILE ../SW_IO.vhd
 set_global_assignment -name VHDL_FILE HEX_DISP.vhd
 set_global_assignment -name VHDL_FILE DIG_OUT.vhd
 set_global_assignment -name VHDL_FILE DIG_IN.vhd
@@ -141,5 +143,6 @@ set_global_assignment -name VHDL_FILE SCOMP.vhd
 set_global_assignment -name BDF_FILE SCOMP_Stopwatch_System.bdf
 set_global_assignment -name BDF_FILE HEX_DISP_6.bdf
 set_global_assignment -name QIP_FILE PLL_main.qip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name SDC_FILE SCOMP_Stopwatch.sdc
+set_global_assignment -name VHDL_FILE SW_CORE.vhd
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

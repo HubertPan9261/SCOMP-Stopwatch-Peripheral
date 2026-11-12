@@ -9,7 +9,10 @@
 --
 -- Follows the same bus style as the Lab 8 TIMER.vhd peripheral:
 -- full 11-bit IO_ADDR decoded here, separate IO_READ and IO_WRITE.
--- CLK is the same clock the stopwatch core uses (50 MHz for now).
+-- SCOMP and the stopwatch core must share the project's 10 MHz clock.
+-- SCOMP holds IO_WRITE high for one clock cycle with stable IO_DATA.
+-- The core samples COMMAND when COMMAND_VALID is high at a rising edge.
+-- CLK is retained for symbol compatibility; this interface is combinational.
 
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
@@ -33,50 +36,20 @@ ENTITY SW_IO IS
 END SW_IO;
 
 ARCHITECTURE a OF SW_IO IS
-  SIGNAL SEL                 : STD_LOGIC;  -- 1 when address is 0x70-0x73
-  SIGNAL CTRL_WRITE          : STD_LOGIC;  -- 1 during an OUT to 0x70
-  SIGNAL cmd_reg             : STD_LOGIC_VECTOR(15 DOWNTO 0);
-  SIGNAL cmd_toggle          : STD_LOGIC;  -- flips once per write to SW_CONTROL
-  SIGNAL sync1, sync2, sync3 : STD_LOGIC;  -- carry the toggle onto CLK
-  SIGNAL read_value          : STD_LOGIC_VECTOR(15 DOWNTO 0);
+  SIGNAL SEL        : STD_LOGIC;
+  SIGNAL read_value : STD_LOGIC_VECTOR(15 DOWNTO 0);
 BEGIN
 
-  -- 0. Address decoding: 0x70-0x73 all share the same top 9 bits.
+  -- Select exactly 0x70 through 0x73.
   SEL <= '1' WHEN IO_ADDR(10 DOWNTO 2) = "000011100" ELSE '0';
 
-  CTRL_WRITE <= '1' WHEN (SEL = '1') AND (IO_ADDR(1 DOWNTO 0) = "00")
-                         AND (IO_WRITE = '1')
-                ELSE '0';
-
-  -- 1. Catch writes to 0x70 with the address and IO_WRITE
-  --    (not by sampling them on a clock).
-  PROCESS (RESETN, CTRL_WRITE)
-  BEGIN
-    IF RESETN = '0' THEN
-      cmd_reg    <= (OTHERS => '0');
-      cmd_toggle <= '0';
-    ELSIF RISING_EDGE(CTRL_WRITE) THEN
-      cmd_reg    <= IO_DATA;
-      cmd_toggle <= NOT cmd_toggle;
-    END IF;
-  END PROCESS;
-
-  -- 2. Turn each toggle flip into exactly one CLK-cycle pulse.
-  PROCESS (RESETN, CLK)
-  BEGIN
-    IF RESETN = '0' THEN
-      sync1 <= '0';
-      sync2 <= '0';
-      sync3 <= '0';
-    ELSIF RISING_EDGE(CLK) THEN
-      sync1 <= cmd_toggle;
-      sync2 <= sync1;
-      sync3 <= sync2;
-    END IF;
-  END PROCESS;
-
-  COMMAND_VALID <= sync2 XOR sync3;  -- high for one CLK cycle per write
-  COMMAND       <= cmd_reg;          -- already stable when the pulse arrives
+  -- Decode SCOMP's one-cycle write strobe directly. The shared clock
+  -- lets the core accept the command without a toggle or synchronizer.
+  COMMAND <= IO_DATA;
+  COMMAND_VALID <= '1' WHEN RESETN = '1' AND SEL = '1'
+                           AND IO_ADDR(1 DOWNTO 0) = "00"
+                           AND IO_WRITE = '1'
+                   ELSE '0';
 
   -- 3. Reads: choose the register, drive the bus only during an IN to us.
   WITH IO_ADDR(1 DOWNTO 0) SELECT read_value <=
