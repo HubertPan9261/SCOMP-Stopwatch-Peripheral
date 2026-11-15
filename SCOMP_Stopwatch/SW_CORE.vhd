@@ -83,7 +83,6 @@ BEGIN
 		END IF;
 	END PROCESS;
 
-  -- Replace these assignments when implementing the stopwatch.
   ELAPSED  <= STD_LOGIC_VECTOR(elapsed_ms);
   CAPTURED <= STD_LOGIC_VECTOR(captured_ms);
   STATUS   <= (15 DOWNTO 3 => '0') & overflow & capture_valid & running;
