@@ -19,7 +19,6 @@ ENTITY SW_CORE IS
 END SW_CORE;
 
 ARCHITECTURE rtl OF SW_CORE IS
-BEGIN
 	SIGNAL tick_count    : INTEGER RANGE 0 TO CLKS_PER_MS - 1;  -- cycles within the current ms
 	SIGNAL elapsed_ms    : UNSIGNED(15 DOWNTO 0);               -- running time
 	SIGNAL captured_ms   : UNSIGNED(15 DOWNTO 0);               -- last captured time
@@ -27,26 +26,27 @@ BEGIN
 	SIGNAL capture_valid : STD_LOGIC;
 	SIGNAL overflow      : STD_LOGIC;
 	
+BEGIN
 	PROCESS(RESETN, CLK)
 	BEGIN
 		IF RESETN = '0' THEN
 			tick_count <= 0;
 			elapsed_ms <= (OTHERS => '0');
 			captured_ms <= (OTHERS => '0');
-			running <= 0;
-			capture_valid <= 0;
-			overflow <= 0;
+			running <= '0';
+			capture_valid <= '0';
+			overflow <= '0';
 			
 		ELSIF RISING_EDGE(CLK) THEN
 			IF COMMAND_VALID = '1' THEN
 				CASE COMMAND(2 DOWNTO 0) IS
-					WHEN "001" || "100" =>
+					WHEN "001" | "100" =>
 						tick_count <= 0;
 						elapsed_ms <= (OTHERS => '0');
 						captured_ms <= (OTHERS => '0');
-						running <= 0;
-						capture_valid <= 0;
-						overflow <= 0;
+						running <= '0';
+						capture_valid <= '0';
+						overflow <= '0';
 						IF COMMAND(2 DOWNTO 0) = "001" THEN
 							running <= '1';
 						ELSE
