@@ -86,8 +86,8 @@ BEGIN
             elapsed_ms <= elapsed_ms;
             overflow   <= overflow;
 
-          WHEN "011" =>                 -- 3 = resume, ignored after overflow
-            IF overflow = '0' THEN
+          WHEN "011" =>                 -- 3 = resume only when paused without overflow
+            IF running = '0' AND overflow = '0' THEN
               running <= '1';
             END IF;
 
