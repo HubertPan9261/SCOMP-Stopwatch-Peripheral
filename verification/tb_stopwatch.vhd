@@ -65,11 +65,17 @@ begin
     procedure expect_regs(e, cap, flags : natural) is
     begin
       assert elapsed = std_logic_vector(to_unsigned(e, 16))
-        report "Unexpected elapsed value" severity failure;
+        report "Unexpected elapsed value: got " &
+          integer'image(to_integer(unsigned(elapsed))) &
+          ", expected " & integer'image(e) severity failure;
       assert captured = std_logic_vector(to_unsigned(cap, 16))
-        report "Unexpected captured value" severity failure;
+        report "Unexpected captured value: got " &
+          integer'image(to_integer(unsigned(captured))) &
+          ", expected " & integer'image(cap) severity failure;
       assert status = std_logic_vector(to_unsigned(flags, 16))
-        report "Unexpected status flags" severity failure;
+        report "Unexpected status flags: got " &
+          integer'image(to_integer(unsigned(status))) &
+          ", expected " & integer'image(flags) severity failure;
     end procedure;
 
     procedure read_reg(a : natural; expected : std_logic_vector(15 downto 0)) is
@@ -172,6 +178,86 @@ begin
       end if;
     end loop;
     report "PASS: full address decode, ignored writes and invalid commands";
+
+    -- Each register reads back its own value (0x71 and 0x72 differ here),
+    -- and a second capture replaces the first.
+    write_reg(16#70#, 1);
+    cycles(3 * C);
+    expect_regs(3, 0, 1);
+    write_reg(16#70#, 5);                -- capture 3
+    expect_regs(3, 3, 3);
+    cycles(2 * C);
+    write_reg(16#70#, 2);                -- pause with elapsed /= captured
+    expect_regs(5, 3, 2);
+    read_reg(16#71#, x"0005");
+    read_reg(16#72#, x"0003");
+    read_reg(16#73#, x"0002");
+    write_reg(16#70#, 5);                -- second capture overwrites
+    expect_regs(5, 5, 2);
+    read_reg(16#72#, x"0005");
+    report "PASS: distinct register reads, repeated capture";
+
+    -- Pause twice: the second pause changes nothing.
+    write_reg(16#70#, 2);
+    cycles(2 * C);
+    expect_regs(5, 5, 2);
+    -- Resume while running: no restart, the partial millisecond is kept.
+    write_reg(16#70#, 1);                -- restart from 0 (tick count 0)
+    cycles(2);
+    write_reg(16#70#, 3);                -- resume while already running
+    expect_regs(0, 0, 1);
+    cycles;
+    expect_regs(1, 0, 1);                -- tick arrives on time
+    report "PASS: repeated pause, resume while running";
+
+    -- Start while running: restarts from 0 and clears the capture.
+    cycles(3 * C);
+    write_reg(16#70#, 5);
+    expect_regs(4, 4, 3);
+    cycles(C);
+    write_reg(16#70#, 1);
+    expect_regs(0, 0, 1);
+    cycles(C);
+    expect_regs(1, 0, 1);
+    report "PASS: start while running";
+
+    -- Clear while running and while paused; stays stopped afterwards.
+    cycles(2 * C);
+    write_reg(16#70#, 4);
+    expect_regs(0, 0, 0);
+    cycles(3 * C);
+    expect_regs(0, 0, 0);
+    write_reg(16#70#, 1);
+    cycles(2 * C);
+    write_reg(16#70#, 5);
+    write_reg(16#70#, 2);
+    write_reg(16#70#, 4);
+    expect_regs(0, 0, 0);
+    cycles(3 * C);
+    expect_regs(0, 0, 0);
+    report "PASS: clear while running and while paused";
+
+    -- Commands on consecutive clock edges (faster than SCOMP can issue them)
+    -- and at SCOMP's fastest rate (one OUT every 4 clocks).
+    write_reg(16#70#, 1);                -- edge 1: start
+    write_reg(16#70#, 5);                -- edge 2: capture 0
+    write_reg(16#70#, 2);                -- edge 3: pause
+    expect_regs(0, 0, 2);
+    write_reg(16#70#, 3);                -- edge 4: resume
+    write_reg(16#70#, 2);                -- edge 5: pause
+    write_reg(16#70#, 3);                -- edge 6: resume
+    expect_regs(0, 0, 3);
+    cycles(C);
+    expect_regs(1, 0, 3);
+    write_reg(16#70#, 2);
+    cycles(3);
+    write_reg(16#70#, 3);
+    cycles(3);
+    write_reg(16#70#, 5);
+    cycles(3);
+    write_reg(16#70#, 2);
+    expect_regs(3, 2, 2);                -- 1 ms + 1 tick, +3 -> 2 ms (captured), +3 -> 3 ms
+    report "PASS: back-to-back commands";
 
     write_reg(16#70#, 1);
     cycles(C - 1);
