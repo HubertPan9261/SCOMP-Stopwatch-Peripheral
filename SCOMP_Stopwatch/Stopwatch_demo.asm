@@ -1,20 +1,21 @@
-; Stopwatch demonstration: clear the largest hex digit.
+; Two-digit stopwatch game.
 ;
 ; Left four displays: captured time in hexadecimal milliseconds.
-; Right two displays: game number.
+; Right two displays: game digits, or EE when the game ends.
 ;
 ; SW0 selects the right digit.
 ; SW1 selects the left digit.
-; Raise only SW9 to start a round after lowering all switches.
+; Lower all switches, then raise only SW9 to start a round.
 ;
-; Active playing time accumulates across rounds.
-; Hardware reset starts a new game.
+; Ten seconds of active playing time across all rounds.
+; Between-round waiting time does not count.
+; Hardware reset restarts the game.
 
 ORG 0
 
 Reset:
     LOADI  4
-    OUT    SW_CONTROL        ; Clear stopwatch; leave stopped
+    OUT    SW_CONTROL        ; Clear stopwatch; remain stopped
 
     LOADI  0
     STORE  Value
@@ -23,14 +24,13 @@ Reset:
     OUT    LEDs
     CALL   UpdateDisplay
 
-; Stopwatch is paused throughout round setup.
+; Stopwatch remains paused during round setup.
 WaitAllDown:
     IN     Switches
     OUT    LEDs
     JNZ    WaitAllDown
 
-; Generate a changing eight-bit candidate.
-; The player's start timing determines the chosen number.
+; Generate a changing two-digit hexadecimal number.
 Counting:
     LOAD   Candidate
     ADDI   1
@@ -47,15 +47,14 @@ Counting:
 
 StartRound:
     LOAD   Candidate
-    JZERO  WaitAllDown       ; Reject 00
+    JZERO  WaitAllDown
     STORE  Value
 
     CALL   UpdateDisplay
 
     LOADI  3
-    OUT    SW_CONTROL       ; Resume accumulated playing time
+    OUT    SW_CONTROL        ; Resume accumulated active time
 
-; Find the larger of the two remaining digits.
 FindLargest:
     LOAD   Value
     AND    NibbleMask
@@ -78,10 +77,9 @@ UseLeftDigit:
     LOAD   LeftDigit
     STORE  Largest
 
-; Ignore switches other than SW0 and SW1 during play.
-; If both selection switches are raised, wait for one selection.
+; Accept exactly one selection switch.
 CheckAnswer:
-    CALL   CheckOverflow
+    CALL   CheckTime
 
     IN     Switches
     OUT    LEDs
@@ -100,7 +98,7 @@ CheckAnswer:
 
 SelectedRight:
     LOAD   RightDigit
-    JZERO  WaitSelectionDown ; Ignore an already-cleared digit
+    JZERO  WaitSelectionDown
     STORE  SelectedDigit
 
     LOAD   ClearRight
@@ -121,8 +119,10 @@ CompareDigit:
     JNZ    GameOver
 
 CorrectAnswer:
+    CALL   CheckTime
+
     LOADI  5
-    OUT    SW_CONTROL       ; Capture without stopping
+    OUT    SW_CONTROL        ; Capture; continue counting
 
     IN     SW_CAPTURED
     STORE  CapturedTime
@@ -134,10 +134,10 @@ CorrectAnswer:
 
     CALL   UpdateDisplay
 
-; Require both selection switches to be lowered before
-; accepting another selection. Timing continues here.
+; Lower both selection switches before selecting again.
+; Stopwatch continues running during this wait.
 WaitSelectionDown:
-    CALL   CheckOverflow
+    CALL   CheckTime
 
     IN     Switches
     OUT    LEDs
@@ -148,30 +148,32 @@ WaitSelectionDown:
 
 RoundComplete:
     LOADI  2
-    OUT    SW_CONTROL       ; Exclude between-round waiting time
+    OUT    SW_CONTROL        ; Pause between rounds
+
+    CALL   CheckTime         ; Check final paused time too
 
     LOADI  5
-    OUT    SW_CONTROL       ; Capture the final paused reading
+    OUT    SW_CONTROL
 
     IN     SW_CAPTURED
     STORE  CapturedTime
 
     CALL   UpdateDisplay
-
-    CALL   CheckOverflow
     JUMP   WaitAllDown
 
-; Wrong answer or overflow ends the game.
-; Preserve the remaining number and final elapsed time.
+; Wrong selection, timeout, or overflow.
 GameOver:
     LOADI  2
-    OUT    SW_CONTROL
+    OUT    SW_CONTROL        ; Preserve final elapsed time
 
     LOADI  5
     OUT    SW_CONTROL
 
     IN     SW_CAPTURED
     STORE  CapturedTime
+
+    LOAD   EndMarker
+    STORE  Value             ; EE on the right two displays
 
     CALL   UpdateDisplay
 
@@ -182,21 +184,26 @@ GameOverLoop:
 
 ; ---------- Subroutines ----------
 
-; Check status bit 2 rather than interpreting elapsed time
-; as a signed number.
-CheckOverflow:
+CheckTime:
     IN     SW_STATUS
     AND    OverflowMask
     JNZ    GameOver
+
+    IN     SW_ELAPSED
+
+    ; A set sign bit means unsigned time >= 32768 ms,
+    ; which is already beyond our 10000 ms limit.
+    JNEG   GameOver
+
+    SUB    TimeLimit
+    JNEG   TimeRemaining
+    JUMP   GameOver
+
+TimeRemaining:
     RETURN
 
-; Physical display arrangement:
-;
 ; HEX5 HEX4 HEX3 HEX2 | HEX1 HEX0
 ;    CapturedTime    |   Value
-;
-; Address 5 controls HEX5-HEX4.
-; Address 4 controls HEX3-HEX0.
 UpdateDisplay:
     LOAD   CapturedTime
     SHIFT  -8
@@ -222,7 +229,10 @@ SelectedDigit:  DW 0
 ClearMask:      DW 0
 Pattern:        DW 0
 
-; ---------- Masks ----------
+; ---------- Constants ----------
+
+TimeLimit:      DW 10000
+EndMarker:      DW &H00EE
 
 NibbleMask:     DW &H000F
 ByteMask:       DW &H00FF
