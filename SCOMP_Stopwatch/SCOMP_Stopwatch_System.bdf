@@ -1028,12 +1028,6 @@ on the Quartus Prime software download page.
 	(bus)
 )
 (connector
-	(text "clk_10MHz" (rect 194 896 244 907)(font "DejaVu Sans Condensed" ))
-	(pt 272 912)
-	(pt 184 912)
-	(bus)
-)
-(connector
 	(text "resetn" (rect 186 880 216 891)(font "DejaVu Sans Condensed" ))
 	(pt 176 896)
 	(pt 272 896)
@@ -1076,12 +1070,6 @@ on the Quartus Prime software download page.
 	(bus)
 )
 (connector
-	(text "STATUS[15..0]" (rect 178 992 247 1003)(font "DejaVu Sans Condensed" ))
-	(pt 272 1008)
-	(pt 168 1008)
-	(bus)
-)
-(connector
 	(text "IO_DATA[15..0]" (rect 554 880 627 891)(font "DejaVu Sans Condensed" ))
 	(pt 544 896)
 	(pt 632 896)
@@ -1099,6 +1087,18 @@ on the Quartus Prime software download page.
 	(pt 640 928)
 	(bus)
 )
+(connector
+	(text "STATUS[15..0]" (rect 186 992 255 1003)(font "DejaVu Sans Condensed" ))
+	(pt 272 1008)
+	(pt 176 1008)
+	(bus)
+)
+(connector
+	(text "clk_10MHz" (rect 186 896 236 907)(font "DejaVu Sans Condensed" ))
+	(pt 272 912)
+	(pt 176 912)
+	(bus)
+)
 (junction (pt 280 88))
 (title_block
 	(rect 944 912 1312 1032)
@@ -1107,7 +1107,7 @@ on the Quartus Prime software download page.
 	(section (rect 0 48 368 72)(text "DESIGNER" (rect 2 0 57 11)(font "Arial" ))(text "Kevin Johnson, Tom Collins" (rect 56 2 310 21)(font "Arial" (font_size 12)))(border))
 	(section (rect 0 72 280 96)(text "NUMBER" (rect 2 0 49 11)(font "Arial" ))(text "1.00" (rect 56 1 90 17)(font "Arial" (font_size 10)))(border))
 	(section (rect 280 72 368 96)(text "REV" (rect 2 1 25 12)(font "Arial" ))(text "A" (rect 43 1 53 17)(font "Arial" (font_size 10)))(border))
-	(section (rect 0 96 240 120)(text "DATE" (rect 2 0 31 11)(font "Arial" ))(text "Thu Nov 12 13:35:21 2026" (rect 56 3 262 19)(font "Arial" (font_size 10)))(date)(border))
+	(section (rect 0 96 240 120)(text "DATE" (rect 2 0 31 11)(font "Arial" ))(text "Tue Nov 17 15:59:00 2026" (rect 56 3 261 19)(font "Arial" (font_size 10)))(date)(border))
 	(section (rect 240 96 310 120)(text "SHEET" (rect 2 0 37 11)(font "Arial" ))(text "1" (rect 55 5 65 21)(font "Arial" (font_size 10))))
 	(section (rect 310 96 368 120)(text "OF" (rect 10 0 25 11)(font "Arial" ))(text "1" (rect 34 4 44 20)(font "Arial" (font_size 10))))
 	(drawing
