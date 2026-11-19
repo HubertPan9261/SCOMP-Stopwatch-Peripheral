@@ -1,0 +1,148 @@
+-- Altera Memory Initialization File (MIF)
+
+DEPTH = 2048;
+WIDTH = 16;
+
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+
+CONTENT
+  BEGIN
+    000 : 1804; -- LOADI  4
+    001 : 9870; -- OUT    SW_CONTROL        ; Clear stopwatch; leave stopped
+    002 : 1800; -- LOADI  0
+    003 : 1074; -- STORE  Value
+    004 : 1076; -- STORE  CapturedTime
+    005 : 1075; -- STORE  Candidate
+    006 : 9801; -- OUT    LEDs
+    007 : 806a; -- CALL   UpdateDisplay
+    008 : 9000; -- IN     Switches
+    009 : 9801; -- OUT    LEDs
+    00a : 7808; -- JNZ    WaitAllDown
+    00b : 0875; -- LOAD   Candidate
+    00c : 3001; -- ADDI   1
+    00d : 387e; -- AND    ByteMask
+    00e : 1075; -- STORE  Candidate
+    00f : 9000; -- IN     Switches
+    010 : 9801; -- OUT    LEDs
+    011 : 700b; -- JZERO  Counting
+    012 : 2883; -- SUB    Bit9
+    013 : 7015; -- JZERO  StartRound
+    014 : 5808; -- JUMP   WaitAllDown
+    015 : 0875; -- LOAD   Candidate
+    016 : 7008; -- JZERO  WaitAllDown       ; Reject 00
+    017 : 1074; -- STORE  Value
+    018 : 806a; -- CALL   UpdateDisplay
+    019 : 1803; -- LOADI  3
+    01a : 9870; -- OUT    SW_CONTROL       ; Resume accumulated playing time
+    01b : 0874; -- LOAD   Value
+    01c : 387d; -- AND    NibbleMask
+    01d : 1077; -- STORE  RightDigit
+    01e : 0874; -- LOAD   Value
+    01f : 5014; -- SHIFT  -4
+    020 : 387d; -- AND    NibbleMask
+    021 : 1078; -- STORE  LeftDigit
+    022 : 0877; -- LOAD   RightDigit
+    023 : 1079; -- STORE  Largest
+    024 : 0878; -- LOAD   LeftDigit
+    025 : 2879; -- SUB    Largest
+    026 : 6828; -- JPOS   UseLeftDigit
+    027 : 582a; -- JUMP   CheckAnswer
+    028 : 0878; -- LOAD   LeftDigit
+    029 : 1079; -- STORE  Largest
+    02a : 8066; -- CALL   CheckOverflow
+    02b : 9000; -- IN     Switches
+    02c : 9801; -- OUT    LEDs
+    02d : 387f; -- AND    SelectionMask
+    02e : 107c; -- STORE  Pattern
+    02f : 702a; -- JZERO  CheckAnswer
+    030 : 2881; -- SUB    Bit0
+    031 : 7036; -- JZERO  SelectedRight
+    032 : 087c; -- LOAD   Pattern
+    033 : 2882; -- SUB    Bit1
+    034 : 703c; -- JZERO  SelectedLeft
+    035 : 582a; -- JUMP   CheckAnswer
+    036 : 0877; -- LOAD   RightDigit
+    037 : 704d; -- JZERO  WaitSelectionDown ; Ignore an already-cleared digit
+    038 : 107a; -- STORE  SelectedDigit
+    039 : 0884; -- LOAD   ClearRight
+    03a : 107b; -- STORE  ClearMask
+    03b : 5841; -- JUMP   CompareDigit
+    03c : 0878; -- LOAD   LeftDigit
+    03d : 704d; -- JZERO  WaitSelectionDown
+    03e : 107a; -- STORE  SelectedDigit
+    03f : 0885; -- LOAD   ClearLeft
+    040 : 107b; -- STORE  ClearMask
+    041 : 087a; -- LOAD   SelectedDigit
+    042 : 2879; -- SUB    Largest
+    043 : 785c; -- JNZ    GameOver
+    044 : 1805; -- LOADI  5
+    045 : 9870; -- OUT    SW_CONTROL       ; Capture without stopping
+    046 : 9072; -- IN     SW_CAPTURED
+    047 : 1076; -- STORE  CapturedTime
+    048 : 0874; -- LOAD   Value
+    049 : 387b; -- AND    ClearMask
+    04a : 1074; -- STORE  Value
+    04b : 7053; -- JZERO  RoundComplete
+    04c : 806a; -- CALL   UpdateDisplay
+    04d : 8066; -- CALL   CheckOverflow
+    04e : 9000; -- IN     Switches
+    04f : 9801; -- OUT    LEDs
+    050 : 387f; -- AND    SelectionMask
+    051 : 784d; -- JNZ    WaitSelectionDown
+    052 : 581b; -- JUMP   FindLargest
+    053 : 1802; -- LOADI  2
+    054 : 9870; -- OUT    SW_CONTROL       ; Exclude between-round waiting time
+    055 : 1805; -- LOADI  5
+    056 : 9870; -- OUT    SW_CONTROL       ; Capture the final paused reading
+    057 : 9072; -- IN     SW_CAPTURED
+    058 : 1076; -- STORE  CapturedTime
+    059 : 806a; -- CALL   UpdateDisplay
+    05a : 8066; -- CALL   CheckOverflow
+    05b : 5808; -- JUMP   WaitAllDown
+    05c : 1802; -- LOADI  2
+    05d : 9870; -- OUT    SW_CONTROL
+    05e : 1805; -- LOADI  5
+    05f : 9870; -- OUT    SW_CONTROL
+    060 : 9072; -- IN     SW_CAPTURED
+    061 : 1076; -- STORE  CapturedTime
+    062 : 806a; -- CALL   UpdateDisplay
+    063 : 9000; -- IN     Switches
+    064 : 9801; -- OUT    LEDs
+    065 : 5863; -- JUMP   GameOverLoop
+    066 : 9073; -- IN     SW_STATUS
+    067 : 3880; -- AND    OverflowMask
+    068 : 785c; -- JNZ    GameOver
+    069 : 8800; -- RETURN
+    06a : 0876; -- LOAD   CapturedTime
+    06b : 5018; -- SHIFT  -8
+    06c : 387e; -- AND    ByteMask
+    06d : 9805; -- OUT    Hex1
+    06e : 0876; -- LOAD   CapturedTime
+    06f : 387e; -- AND    ByteMask
+    070 : 5008; -- SHIFT  8
+    071 : 2074; -- ADD    Value
+    072 : 9804; -- OUT    Hex0
+    073 : 8800; -- RETURN
+    074 : 0000; -- Value:          DW 0
+    075 : 0000; -- Candidate:      DW 0
+    076 : 0000; -- CapturedTime:   DW 0
+    077 : 0000; -- RightDigit:     DW 0
+    078 : 0000; -- LeftDigit:      DW 0
+    079 : 0000; -- Largest:        DW 0
+    07a : 0000; -- SelectedDigit:  DW 0
+    07b : 0000; -- ClearMask:      DW 0
+    07c : 0000; -- Pattern:        DW 0
+    07d : 000f; -- NibbleMask:     DW &H000F
+    07e : 00ff; -- ByteMask:       DW &H00FF
+    07f : 0003; -- SelectionMask:  DW &H0003
+    080 : 0004; -- OverflowMask:   DW &H0004
+    081 : 0001; -- Bit0:           DW &H0001
+    082 : 0002; -- Bit1:           DW &H0002
+    083 : 0200; -- Bit9:           DW &H0200
+    084 : 00f0; -- ClearRight:     DW &H00F0
+    085 : 000f; -- ClearLeft:      DW &H000F
+
+    [086..7ff] : 0000; -- Empty memory
+
+  END;
